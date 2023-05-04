@@ -12,5 +12,4 @@ BEGIN
     FROM corrections as C
     INNER JOIN projects AS P ON P.id = C.project_id
     where C.user_id = users.id);
-END $$
-DELIMITER ;
+END;
