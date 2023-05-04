@@ -4,9 +4,10 @@
 -- Procedure ComputeAverageScoreForUser is taking 1 input:
 -- user_id, a users.id value (you can assume user_id is linked to an existing users)
 
+DROP PROCEDURE IF EXISTS ComputeAverageWeightedScoreForUser;
 DELIMITER $$
 CREATE PROCEDURE ComputeAverageWeightedScoreForUser (
-  IN user_id INT)
+  user_id INTEGER)
 BEGIN
     DECLARE avg_weighted_score FLOAT;
     SET avg_weighted_score = (
