@@ -8,23 +8,16 @@ DELIMITER $$
 CREATE PROCEDURE ComputeAverageWeightedScoreForUser (
   IN user_id INT)
 BEGIN
-    DECLARE total_weighted_score FLOAT;
-    DECLARE total_weight FLOAT;
     DECLARE avg_weighted_score FLOAT;
-    
-    -- Compute the total weighted score and total weight for the user
-    SELECT SUM(score*weight), SUM(weight) INTO total_weighted_score, total_weight
-      FROM corrections WHERE user_id = user_id;
-    
-    -- Compute the average weighted score
-    IF total_weight > 0 THEN
-        SET avg_weighted_score = total_weighted_score / total_weight;
-    ELSE
-        SET avg_weighted_score = 0;
-    END IF;
-    
+    SET avg_weighted_score = (
+      SELECT SUM(score * weight) / SUM(weight)
+      FROM users
+      JOIN corrections ON users.id=corrections.user_id
+      JOIN projects ON corrections.project_id=projects.id
+      WHERE user.id=user_id);
+ 
     -- Update the user's average weighted score in the users table
-    UPDATE users SET average_weighted_score = avg_weighted_score WHERE id = user_id;
+    UPDATE users SET average_score = avg_weighted_score WHERE id=user_id;
     
 END$$
 DELIMITER ;
