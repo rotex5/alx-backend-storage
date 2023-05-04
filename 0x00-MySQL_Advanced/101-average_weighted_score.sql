@@ -4,16 +4,13 @@
 -- Procedure ComputeAverageWeightedScoreForUsers is not taking any input.
 
 DROP PROCEDURE IF EXISTS ComputeAverageWeightedScoreForUsers;
-
-DELIMITER $$
-CREATE PROCEDURE ComputeAverageWeightedScoreForUsers()
+DELIMITER |
+CREATE PROCEDURE ComputeAverageWeightedScoreForUsers ()
 BEGIN
-    UPDATE users AS U
-    JOIN (
-        SELECT user_id, SUM(score * weight) / SUM(weight) AS avg_weighted_score
-        FROM corrections
-        GROUP BY user_id
-    ) AS C ON U.id = C.user_id
-    SET U.average_weighted_score = C.avg_weighted_score;
-END$$
+    UPDATE users set average_score = (
+    SELECT SUM(corrections.score * projects.weight) / SUM(projects.weight)
+    FROM corrections as C
+    INNER JOIN projects AS P ON P.id = C.project_id
+    where C.user_id = users.id);
+END $$
 DELIMITER ;
