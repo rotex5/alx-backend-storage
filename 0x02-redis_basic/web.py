@@ -12,6 +12,9 @@ redis_client = redis.Redis()
 
 
 def cache_with_count(expiration_time):
+    """
+    Decorator counting how many times a URL is accessed
+    """
     def decorator(func):
         @wraps(func)
         def wrapper(url):
@@ -37,5 +40,12 @@ def cache_with_count(expiration_time):
 
 @cache_with_count(10)
 def get_page(url: str) -> str:
+    """
+    Get the HTML content of a particular URL and return it
+    """
     response = requests.get(url)
     return response.text
+
+
+if __name__ == "__main__":
+    print(get_page("https://github.com/"))
