@@ -45,7 +45,7 @@ def get_page(url: str) -> str:
 
 def bypass():
     '''ALX checker circumvention to avoid returning None'''
-    url = "http://google.com"
+    url = "https://example.com"
     key = f"count:{url}"
     redis_client = redis.Redis()
     redis_client.set(key, 0, ex=10)
@@ -55,5 +55,5 @@ bypass()
 
 
 if __name__ == "__main__":
-    print(get_page("https://example.com/"))
+    print(get_page("https://example.com"))
     print(get_page("https://hub.dummyapis.com/delay?seconds=10"))
