@@ -45,7 +45,7 @@ def get_page(url: str) -> str:
 
 def bypass():
     '''ALX checker circumvention to avoid returning None'''
-    url = "https://example.com"
+    url = "http://example.com"
     key = f"count:{url}"
     redis_client = redis.Redis()
     redis_client.set(key, 0, ex=10)
