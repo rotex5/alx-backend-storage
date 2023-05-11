@@ -3,50 +3,39 @@
 Implementing an expiring web cache and tracker
 """
 import requests
+import time
 import redis
 from functools import wraps
-from typing import Callable
+
+# Create a Redis client
+redis_client = redis.Redis()
 
 
-redis_conn = redis.Redis()
-
-
-def cache_expiring(time: int):
-    """
-    Decortator for counting how many times a request
-    has been made
-    """
-    def decorator(func: Callable):
+def cache_with_count(expiration_time):
+    def decorator(func):
         @wraps(func)
-        def wrapper(url: str) -> str:
-            """ Wrapper for decorator functionality """
-            cache_key = f"cached:{url}"
-            cached_content = redis_conn.get(cache_key)
-            if cached_content:
-                return cached_content.decode("utf-8")
+        def wrapper(url):
+            # Check if the URL is present in the cache
+            cached_data = redis_client.get(url)
+            if cached_data is not None:
+                return cached_data.decode('utf-8')
 
-            response = func(url)
-            redis_conn.setex(cache_key, time, response)
-            return response
+            # URL not present in the cache, fetch it from the server
+            response = requests.get(url)
+            html_content = response.text
+
+            # Store the result in the cache with the given expiration time
+            redis_client.setex(url, expiration_time, html_content)
+
+            # Track the number of times the URL was accessed
+            redis_client.incr(f'count:{url}')
+
+            return html_content
         return wrapper
     return decorator
 
 
-def count_requests(func: Callable) -> Callable:
-    """
-    It uses the requests module to obtain the
-    HTML content of a particular URL and returns it
-    """
-    @wraps(func)
-    def wrapper(url: str) -> str:
-        count_key = f"count:{url}"
-        redis_conn.incr(count_key)
-        return func(url)
-    return wrapper
-
-
-@cache_expiring(10)
-@count_requests
+@cache_with_count(10)
 def get_page(url: str) -> str:
-    req = requests.get(url)
-    return req.text
+    response = requests.get(url)
+    return response.text
