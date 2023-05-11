@@ -3,49 +3,46 @@
 Implementing an expiring web cache and tracker
 """
 import requests
-import time
 import redis
 from functools import wraps
+from typing import Callable
 
-# Create a Redis client
 redis_client = redis.Redis()
 
 
-def cache_with_count(expiration_time):
+def cache_with_count(func: Callable) -> Callable:
     """
-    Decorator counting how many times a URL is accessed
+    Decortator for cace how many times a
+    particular url has been accessed
     """
-    def decorator(func):
-        @wraps(func)
-        def wrapper(url):
-            # Check if the URL is present in the cache
-            cached_data = redis_client.get(url)
-            if cached_data is not None:
-                return cached_data.decode('utf-8')
 
-            # URL not present in the cache, fetch it from the server
-            response = requests.get(url)
-            html_content = response.text
+    @wraps(func)
+    def wrapper(url):
+        """ Wrapper for decorator """
+        cached_html = redis_client.get(f"cached:{url}")
+        if cached_html:
+            return cached_html.decode('utf-8')
 
-            # Store the result in the cache with the given expiration time
-            redis_client.setex(url, expiration_time, html_content)
+        # Track the number of times the URL was accessed
+        redis_client.incr("count:{}".format(url))
 
-            # Track the number of times the URL was accessed
-            redis_client.incr(f'count:{url}')
+        html_content = func(url)
+        return html_content
 
-            return html_content
-        return wrapper
-    return decorator
+    return wrapper
 
 
-@cache_with_count(10)
+@cache_with_count
 def get_page(url: str) -> str:
     """
     Get the HTML content of a particular URL and return it
     """
     response = requests.get(url)
+    # Store the result in the cache with the given expiration time
+    redis_client.setex("cached:{}".format(url), 10, response.text)
     return response.text
 
 
 if __name__ == "__main__":
-    print(get_page("https://github.com/"))
+    print(get_page("https://example.com/"))
+    print(get_page("https://hub.dummyapis.com/delay?seconds=10"))
