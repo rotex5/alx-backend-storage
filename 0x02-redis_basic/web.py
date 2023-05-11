@@ -32,7 +32,7 @@ def cache_expiring(time: int):
     return decorator
 
 
-def count_requests(func: Callable):
+def count_requests(func: Callable) -> Callable:
     """
     It uses the requests module to obtain the
     HTML content of a particular URL and returns it
